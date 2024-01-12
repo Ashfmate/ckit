@@ -9,12 +9,15 @@ use clap::{
 	ArgMatches};
 
 mod sub_commands;
+mod init;
 use colored::Colorize;
-use sub_commands::*;
+use sub_commands::SubCmd;
+use init::Init;
 
 fn main() {
 	let cmds:Vec<Box<dyn SubCmd>> = vec![
 		Box::new(Init::new("init")),
+		
 		];
 
 	let matches = kitpp(&cmds).get_matches();
