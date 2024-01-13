@@ -10,17 +10,21 @@ use clap::{
 
 mod sub_commands;
 mod init;
+mod build;
+
 use colored::Colorize;
 use sub_commands::SubCmd;
 use init::Init;
+use build::Build;
 
 fn main() {
 	let cmds:Vec<Box<dyn SubCmd>> = vec![
 		Box::new(Init::new("init")),
-		
+		Box::new(Build::new("build")),
 		];
 
-	let matches = kitpp(&cmds).get_matches();
+	let matches = kitpp(&cmds)
+		.get_matches_from(vec!["kit++","build",]);
 
 	process_matches(cmds,matches);
 }

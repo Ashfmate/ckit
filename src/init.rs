@@ -26,7 +26,7 @@ impl Init {
 
 impl SubCmd for Init{
 	fn cmd(&self) -> Command {
-		Command::new(self.name)
+		Command::new(self.get_name())
 		.about("Creates a c++ project")
 		.arg(
 			Arg::new("name")
