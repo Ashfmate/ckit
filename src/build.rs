@@ -6,18 +6,8 @@ use serde_json::{Map, Value};
 
 use super::sub_commands::SubCmd;
 
-pub struct Build {
-	matcher: Option<ArgMatches>,
-	pub name: &'static str,
-}
-
-impl Build {
-	pub fn new(name: &'static str) -> Self { 
-		Self { matcher: None, name } 
-	}
-
-	fn build_compile_command(&self, map: Map<String,Value>) -> String {
-		let mut builtup_command = String::new();
+pub fn build_compile_command(map: Map<String,Value>) -> String {
+	let mut builtup_command = String::new();
 		if let Some(compiler) = map.get("CXX_COMPILER") {
 			let compiler = compiler
 				.as_str()
@@ -53,15 +43,26 @@ impl Build {
 			"The \"DEBUG_PATH\" value must be the path to the folder where the executable will be in").as_str());
 			builtup_command.push_str(format!("-o {debug_path}/").as_str())
 		}
-		if let Some(exec_name) = map.get("EXECUTABLE_NAME") {
-			let exec_name = exec_name
+
+		if let Some(proj_name) = map.get("PROJECT_NAME") {
+			let proj_name = proj_name
 				.as_str()
 				.expect(format!("{}",
-					"The \"EXECUTABLE_NAME\" value must be the name of the executable in string").as_str());
-			builtup_command.push_str(format!("{exec_name} ").as_str())
+					"The \"PROJECT_NAME\" value must be name of the executable".red()).as_str());
+			builtup_command.push_str(format!("{proj_name} ").as_str());
 		}
 
 		builtup_command
+}
+
+pub struct Build {
+	matcher: Option<ArgMatches>,
+	pub name: &'static str,
+}
+
+impl Build {
+	pub fn new(name: &'static str) -> Self { 
+		Self { matcher: None, name } 
 	}
 }
 
@@ -105,15 +106,23 @@ impl SubCmd for Build {
 		let map: Map<String, Value> = serde_json::from_str(&contents)
 			.expect("The config.json file is not a proper json file");
 
-		let res = self.build_compile_command(map);
+		let res = build_compile_command(map);
 
-		process::Command::new("sh")
+		let status = process::Command::new("sh")
 		.arg("-c")
 		.arg(res)
 		.spawn()
 		.expect("Could not start compilation command")
 		.wait()
 		.expect("Did not start compilation command");
+
+		if status.success() {
+			println!("Successfully built the project");
+		} else {
+			eprintln!("{}\n{}",
+				"Error when building the project".red(),
+				status.to_string());
+		}
 	}
 
 	fn get_name(&self) -> &'static str {
