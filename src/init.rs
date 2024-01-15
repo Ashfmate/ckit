@@ -1,5 +1,5 @@
 use std::{
-	fs,
+	fs::{self, File},
 	process,
 	env};
 
@@ -10,6 +10,7 @@ use clap::{
 	ArgAction};
 
 use colored::Colorize;
+use serde_json::{Map, Value};
 
 use super::sub_commands::SubCmd;
 
@@ -74,19 +75,39 @@ impl SubCmd for Init{
 		.wait()
 		.expect("cp command did not start");
 
-		if status.success() {
-			let dir = if dir != "." { dir }
+		let proj_name = {
+			if dir != "." { dir.clone() }
 			else {
 				env::current_dir()
-				.expect("Could not get current dir")
-				.components().last().unwrap().as_os_str().to_str().unwrap().to_string()
-			};
-			println!("{} {dir}", "Successfully kickstarted the project".green());
+				.expect("Insufficient permissions or directory doesn't exist")
+				.components().last().unwrap()
+				.as_os_str().to_str().unwrap().to_string()
+			}
+		};
+
+		if status.success() {
+			println!("{} {proj_name}", 
+				"Successfully kickstarted the project".green());
 		} else {
 			eprintln!("{}\n{}",
 				"Error when creating the project".red(),
 				status.to_string());
 		}
+
+		let path = format!("{dir}/config.json");
+		let buffer = fs::read_to_string(&path)
+			.expect("Insufficient permissions for config.json file or it doesn't exist");
+
+		let mut json: Map<String, Value> = serde_json::from_str(&buffer)
+			.expect("The config file is not a correct json file");
+
+		json.insert(String::from("PROJECT_NAME"), Value::String(proj_name));
+
+		let configs = File::create(dir + "/config.json")
+			.expect("Could not open the file config.json");
+
+		serde_json::to_writer_pretty(configs, &json)
+			.expect("Could not serialize config.json file");
 	}
 
 	fn get_name(&self) -> &'static str {
