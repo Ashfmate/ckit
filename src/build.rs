@@ -4,56 +4,9 @@ use clap::{ArgMatches, Command, Arg, ArgAction};
 use colored::Colorize;
 use serde_json::{Map, Value};
 
+use crate::config_parser::build_compile_command;
+
 use super::sub_commands::SubCmd;
-
-pub fn build_compile_command(map: Map<String,Value>) -> String {
-	let mut builtup_command = String::new();
-		if let Some(compiler) = map.get("CXX_COMPILER") {
-			let compiler = compiler
-				.as_str()
-				.expect(format!("{}\n{}",
-					"The \"CXX_COMPILER\" value must be a path to the compiler as a string".red(),
-					"Alternatively you could enter the compiler's name if it exits in /usr/bin".yellow()).as_str());
-			builtup_command.push_str(format!("{compiler} ").as_str());
-			builtup_command.push(' ');
-		}
-
-		if let Some(standard) = map.get("CXX_STANDARD") {
-			let standard = standard
-				.as_number()
-				.expect(format!("{}",
-					"The \"CXX_STANDARD\" value must be a number".red()).as_str())
-				.as_i64()
-				.expect(format!("{}","\"CXX_STANDARD\" value must be integral").as_str());
-			builtup_command.push_str(format!("-std=c++{standard} ").as_str());
-		}
-
-		if let Some(main_path) = map.get("MAIN_PATH") {
-			let main_path = main_path
-				.as_str()
-				.expect(format!("{}",
-					"The \"MAIN_PATH\" value must be the path the cpp file with the main function".red()).as_str());
-			builtup_command.push_str(format!("{main_path} ").as_str());
-		}
-
-		if let Some(debug_path) = map.get("DEBUG_PATH") {
-			let debug_path = debug_path
-			.as_str()
-			.expect(format!("{}",
-			"The \"DEBUG_PATH\" value must be the path to the folder where the executable will be in").as_str());
-			builtup_command.push_str(format!("-o {debug_path}/").as_str())
-		}
-
-		if let Some(proj_name) = map.get("PROJECT_NAME") {
-			let proj_name = proj_name
-				.as_str()
-				.expect(format!("{}",
-					"The \"PROJECT_NAME\" value must be name of the executable".red()).as_str());
-			builtup_command.push_str(format!("{proj_name} ").as_str());
-		}
-
-		builtup_command
-}
 
 pub struct Build {
 	matcher: Option<ArgMatches>,

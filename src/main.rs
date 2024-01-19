@@ -11,6 +11,7 @@ use clap::{
 mod sub_commands;
 mod init;
 mod build;
+mod config_parser;
 
 use colored::Colorize;
 use sub_commands::SubCmd;
